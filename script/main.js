@@ -1,5 +1,4 @@
 const IMG_URL = 'https://image.tmdb.org/t/p/w185_and_h278_bestv2';
-const API_KEY = 'c6abbe122b536866da931606332c255f';
 
 // Elements
 
@@ -7,23 +6,55 @@ const leftMenu = document.querySelector('.left-menu');
 const hamburger = document.querySelector('.hamburger');
 const tvShowsList = document.querySelector('.tv-shows__list');
 const modal = document.querySelector('.modal');
+const tvShows = document.querySelector('.tv-shows');
+const tvCardImg = document.querySelector('.tv-card__img');
+const modalTitle = document.querySelector('.modal__title');
+const genresList = document.querySelector('.genres-list');
+const rating = document.querySelector('.rating');
+const description = document.querySelector('.description');
+const modalLink = document.querySelector('.modal__link');
+const searchForm = document.querySelector('.search__form');
+const searchFormInput = document.querySelector('.search__form-input');
 
+const loading = document.createElement('div');
+
+loading.className = 'loading';
 
 class DBService {
+
+    constructor() {
+        this.SERVER = 'https://api.themoviedb.org/3';
+        this.API_KEY = 'c6abbe122b536866da931606332c255f';
+    }
+
     getData = async (url) => {
         const res = await fetch(url);
 
         if (res.ok) {
             return res.json();
         } else {
-            throw new Error(`Не удалось получить данные по адресу ${url}`)
+            throw new Error(`Не удалось получить данные по адресу ${url}`);
         }
     }
 
     getTestData = () => {
-        return this.getData('test.json')
+        return this.getData('test.json');
+    }
+
+    getTestCard = () => {
+        return this.getData('card.json');
+    }
+
+    getSearchResult = (query) => {
+        return this.getData(`${this.SERVER}/search/tv?api_key=${this.API_KEY}&query=${query}&language=ru-RU`);
+    }
+
+    getTvShow = (id) => {
+        return this.getData(`${this.SERVER}/tv/${id}?api_key=${this.API_KEY}&language=ru-RU`);
     }
 }
+
+console.log(new DBService().getSearchResult('Папа'));
 
 const renderCard = (response) => {
     console.log(response.results);
@@ -35,16 +66,18 @@ const renderCard = (response) => {
             backdrop_path: backdrop,
             name: title,
             poster_path: poster,
-            vote_average: vote
+            vote_average: vote,
+            id
         } = item;
         const posterIMG = poster ? IMG_URL + poster : 'img/no-poster.jpg';
         const backdropIMG = backdrop ? IMG_URL + backdrop : '';
         const voteElem = vote ? `<span class="tv-card__vote">${vote}</span>` : '';
+
         const card = document.createElement('li');
 
         card.classList.add('tv-shows__item');
         card.innerHTML = `
-        <a href="#" class="tv-card">
+        <a href="#" id="${id}" class="tv-card">
             ${voteElem}
             <img class="tv-card__img"
                 src="${posterIMG}"
@@ -54,11 +87,23 @@ const renderCard = (response) => {
         </a>
         `;
 
+        loading.remove()
         tvShowsList.append(card);
     });
 };
 
-new DBService().getTestData().then(renderCard);
+searchForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const value = searchFormInput.value.trim();
+
+    if (value) {
+        tvShows.append(loading);
+        new DBService().getSearchResult(value).then(renderCard);
+    }
+
+    searchFormInput.value = '';
+});
 
 // Open and close menu
 
@@ -75,6 +120,7 @@ document.addEventListener('click', (event) => {
 });
 
 leftMenu.addEventListener('click', (event) => {
+    event.preventDefault();
     const target = event.target;
     const dropdown = target.closest('.dropdown');
 
@@ -115,9 +161,26 @@ tvShowsList.addEventListener('click', (event) => {
     const card = target.closest('.tv-card');
 
     if (card) {
-        document.body.style.overflow = "hidden";
-        modal.classList.remove('hide');
-    }
+        new DBService().getTvShow(card.id).then(data => {
+            tvCardImg.src = IMG_URL + data.poster_path;
+            tvCardImg.alt = data.name;
+            modalTitle.textContent = data.name;
+            /* genresList.innerHTML = data.genres.reduce((acc, item) => {
+                return `${acc}<li>${item.name}</li>`
+            }, ''); */
+            genresList.textContent = '';
+
+            for (const item of data.genres) {
+                genresList.innerHTML += `<li>${item.name}</li>`;
+            }
+            rating.textContent = data.vote_average;
+            description.textContent = data.overview;
+            modalLink.href = data.homepage;
+        }).then(() => {
+            document.body.style.overflow = "hidden";
+            modal.classList.remove('hide');
+        })
+    };
 });
 
 // Close modal window
