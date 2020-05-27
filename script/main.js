@@ -109,7 +109,7 @@ tvCardImages.forEach(elem => {
 // Open modal window
 
 tvShowsList.addEventListener('click', (event) => {
-    event.defaultPrevented();
+    event.preventDefault();
 
     const target = event.target;
     const card = target.closest('.tv-card');
