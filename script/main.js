@@ -38,17 +38,17 @@ const renderCard = (response) => {
             vote_average: vote
         } = item;
         const posterIMG = poster ? IMG_URL + poster : 'img/no-poster.jpg';
-        const backdropIMG = '';
-        const voteElem = '';
+        const backdropIMG = backdrop ? IMG_URL + backdrop : '';
+        const voteElem = vote ? `<span class="tv-card__vote">${vote}</span>` : '';
         const card = document.createElement('li');
 
         card.classList.add('tv-shows__item');
         card.innerHTML = `
         <a href="#" class="tv-card">
-            <span class="tv-card__vote">${vote}</span>
+            ${voteElem}
             <img class="tv-card__img"
                 src="${posterIMG}"
-                data-backdrop="${IMG_URL + backdrop}"
+                data-backdrop="${backdropIMG}"
                 alt="${title}">
             <h4 class="tv-card__head">${title}</h4>
         </a>
