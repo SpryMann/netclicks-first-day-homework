@@ -1,3 +1,2 @@
-# netclicks-first-day-homework
-This is the first day homework on workshop Netclicks
+Здесь лежат все файлы, которые были созданы и изменены в течение воркшопа Netclicks
 
