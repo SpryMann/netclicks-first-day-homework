@@ -16,8 +16,11 @@ const modalLink = document.querySelector('.modal__link');
 const searchForm = document.querySelector('.search__form');
 const searchFormInput = document.querySelector('.search__form-input');
 
+const searchNotFoundError = document.createElement('h4');
 const loading = document.createElement('div');
 
+searchNotFoundError.textContent = 'По вашему запросу ничего не было найдено!';
+searchNotFoundError.className = 'error';
 loading.className = 'loading';
 
 class DBService {
@@ -54,42 +57,44 @@ class DBService {
     }
 }
 
-console.log(new DBService().getSearchResult('Папа'));
-
 const renderCard = (response) => {
-    console.log(response.results);
     tvShowsList.textContent = '';
 
-    response.results.forEach(item => {
+    if (response.total_results == 0) {
+        loading.remove();
+        tvShows.append(searchNotFoundError);
+    } else {
+        response.results.forEach(item => {
 
-        const {
-            backdrop_path: backdrop,
-            name: title,
-            poster_path: poster,
-            vote_average: vote,
-            id
-        } = item;
-        const posterIMG = poster ? IMG_URL + poster : 'img/no-poster.jpg';
-        const backdropIMG = backdrop ? IMG_URL + backdrop : '';
-        const voteElem = vote ? `<span class="tv-card__vote">${vote}</span>` : '';
+            const {
+                backdrop_path: backdrop,
+                name: title,
+                poster_path: poster,
+                vote_average: vote,
+                id
+            } = item;
+            const posterIMG = poster ? IMG_URL + poster : 'img/no-poster.jpg';
+            const backdropIMG = backdrop ? IMG_URL + backdrop : '';
+            const voteElem = vote ? `<span class="tv-card__vote">${vote}</span>` : '';
 
-        const card = document.createElement('li');
+            const card = document.createElement('li');
 
-        card.classList.add('tv-shows__item');
-        card.innerHTML = `
-        <a href="#" id="${id}" class="tv-card">
-            ${voteElem}
-            <img class="tv-card__img"
-                src="${posterIMG}"
-                data-backdrop="${backdropIMG}"
-                alt="${title}">
-            <h4 class="tv-card__head">${title}</h4>
-        </a>
-        `;
+            card.classList.add('tv-shows__item');
+            card.innerHTML = `
+            <a href="#" id="${id}" class="tv-card">
+                ${voteElem}
+                <img class="tv-card__img"
+                    src="${posterIMG}"
+                    data-backdrop="${backdropIMG}"
+                    alt="${title}">
+                <h4 class="tv-card__head">${title}</h4>
+            </a>
+            `;
 
-        loading.remove()
-        tvShowsList.append(card);
-    });
+            loading.remove()
+            tvShowsList.append(card);
+        });
+    }
 };
 
 searchForm.addEventListener('submit', (event) => {
@@ -156,14 +161,21 @@ tvCardImages.forEach(elem => {
 
 tvShowsList.addEventListener('click', (event) => {
     event.preventDefault();
+    tvShowsList.append(loading);
 
     const target = event.target;
     const card = target.closest('.tv-card');
 
     if (card) {
         new DBService().getTvShow(card.id).then(data => {
-            tvCardImg.src = IMG_URL + data.poster_path;
-            tvCardImg.alt = data.name;
+            if (data.poster_path == null) {
+                tvCardImg.parentNode.classList.add('hide');
+            } else {
+                tvCardImg.parentNode.classList.remove('hide');
+                tvCardImg.src = IMG_URL + data.poster_path;
+                tvCardImg.alt = data.name;
+            }
+
             modalTitle.textContent = data.name;
             /* genresList.innerHTML = data.genres.reduce((acc, item) => {
                 return `${acc}<li>${item.name}</li>`
@@ -177,6 +189,7 @@ tvShowsList.addEventListener('click', (event) => {
             description.textContent = data.overview;
             modalLink.href = data.homepage;
         }).then(() => {
+            loading.remove();
             document.body.style.overflow = "hidden";
             modal.classList.remove('hide');
         })
