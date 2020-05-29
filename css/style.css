@@ -102,11 +102,11 @@ p {
 }
 
 .error {
-    margin-top: 50px;
-    font-size: 32px;
-    color: #DC143C;
-    text-align: center;
-    text-shadow: 1px 1px 2px black;
+    margin-top: 50px !important;
+    font-size: 32px !important;
+    color: #DC143C !important;
+    text-align: center !important;
+    text-shadow: 1px 1px 2px black !important;
 }
 
 .left-menu {
@@ -1218,4 +1218,18 @@ div:after {
         transform: translate(0, 0) scale(1) rotate(360deg);
         background-color: #00838f;
     }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+.pagination li {
+    margin: 0 5px;
+}
+
+.pagination li a {
+    padding: 0 5px;
 }
